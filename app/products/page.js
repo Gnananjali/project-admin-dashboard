@@ -101,7 +101,18 @@ function ProductsPageContent() {
       .then((data) => {
       if (requestId !== latestRequestId.current) return;
 
-      const localAdded = mutations.added.filter((product) => {
+      
+
+      const mergedProducts = applyMutations(data.products).filter(
+  (product) =>
+    !mutations.added.some(
+      (addedProduct) => addedProduct.id === product.id
+    )
+);
+
+const localAdded =
+  page === 1
+    ? mutations.added.filter((product) => {
         const matchesSearch =
           !q ||
           product.title.toLowerCase().includes(q.toLowerCase());
@@ -110,27 +121,55 @@ function ProductsPageContent() {
           !category || product.category === category;
 
         return matchesSearch && matchesCategory;
-      });
+      })
+    : [];
 
-      const mergedProducts = applyMutations(data.products);
+const productsWithLocalAdds = [
+  ...localAdded,
+  ...mergedProducts,
+];
 
       const uniqueProducts = Array.from(
-        new Map(mergedProducts.map((product) => [product.id, product])).values()
+        new Map(
+  productsWithLocalAdds.map((product) => [product.id, product])
+).values()
       );
 
-      const totalPages = Math.max(
-  1,
-  Math.ceil(uniqueProducts.length / pageSize)
+      const localAddedCount = mutations.added.filter((product) => {
+  const matchesSearch =
+    !q ||
+    product.title.toLowerCase().includes(q.toLowerCase());
+
+  const matchesCategory =
+    !category || product.category === category;
+
+  return matchesSearch && matchesCategory;
+}).length;
+
+     
+
+const deletedFromApiCount = mutations.deleted.filter(
+  (id) => !mutations.added.some((product) => product.id === id)
+).length;
+
+const adjustedTotal = Math.max(
+  0,
+  data.total + localAddedCount - deletedFromApiCount
 );
 
-      if (page > totalPages) {
-        updateParams({ page: totalPages });
-        return;
-      }
+const totalPages = Math.max(
+  1,
+  Math.ceil(adjustedTotal / pageSize)
+);
 
-      setProducts(uniqueProducts);
-      setTotal(uniqueProducts.length);
-      setStatus(uniqueProducts.length === 0 ? "empty" : "success");
+if (page > totalPages) {
+  updateParams({ page: totalPages });
+  return;
+}
+
+setProducts(uniqueProducts);
+setTotal(adjustedTotal);
+setStatus(uniqueProducts.length === 0 ? "empty" : "success");
     })
       .catch((err) => {
         if (err.raw?.code === "ERR_CANCELED") return; // expected when a newer request supersedes this one

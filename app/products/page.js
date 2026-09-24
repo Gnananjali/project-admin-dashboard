@@ -61,6 +61,7 @@ function ProductsPageContent() {
   // problem called out in the assignment).
   const latestRequestId = useRef(0);
   const abortControllerRef = useRef(null);
+  const skipLoadingRef = useRef(false);
 
   function updateParams(next) {
     const params = new URLSearchParams(searchParams.toString());
@@ -95,8 +96,12 @@ function ProductsPageContent() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    setStatus("loading");
-    setErrorMessage("");
+    if (!skipLoadingRef.current) {
+  setStatus("loading");
+}
+
+skipLoadingRef.current = false;
+setErrorMessage("");
 
     const [sortBy, order] = sortParam ? sortParam.split("-") : ["", "asc"];
 
@@ -218,6 +223,7 @@ setStatus(uniqueProducts.length === 0 ? "empty" : "success");
       await deleteProduct(deleteTarget.id);
     }
 
+    skipLoadingRef.current = true;
     saveDeletedProduct(deleteTarget.id);
 
     setProducts((prev) =>
@@ -237,54 +243,73 @@ setStatus(uniqueProducts.length === 0 ? "empty" : "success");
     <>
       <Header />
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <div className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 bg-white px-4 py-3">
-          <h1 className="text-lg font-semibold text-ink-900">Products</h1>
-          <Link
-            href="/products/new"
-            className="rounded-md bg-signal px-3 py-2 text-sm font-medium text-white hover:bg-signal-dark"
-          >
-            Add product
-          </Link>
-        </div>
-
-        <div className="sticky top-[61px] z-20 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 bg-white px-4 py-3">
-  <SearchBar value={searchInput} onChange={setSearchInput} />
-
-  <div className="flex flex-wrap items-center gap-3">
-    <FilterSort
-      categories={categories}
-      category={category}
-      onCategoryChange={handleCategoryChange}
-      sort={sortParam}
-      onSortChange={handleSortChange}
-      searchActive={Boolean(q)}
-    />
-
-    <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1">
-      <button
-        type="button"
-        onClick={() => setViewMode("table")}
-        className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-          viewMode === "table"
-            ? "bg-slate-100 text-slate-900"
-            : "text-slate-500 hover:text-slate-900"
-        }`}
-      >
-        ▤ Table
-      </button>
-
-      <button
-        type="button"
-        onClick={() => setViewMode("cards")}
-        className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-          viewMode === "cards"
-            ? "bg-slate-100 text-slate-900"
-            : "text-slate-500 hover:text-slate-900"
-        }`}
-      >
-        ▦ Cards
-      </button>
+        <div className="sticky top-0 z-30 -mx-4 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur">
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+        Products
+      </h1>
+      <p className="mt-1 text-sm text-slate-500">
+        Manage your product catalog
+      </p>
     </div>
+
+    <Link
+      href="/products/new"
+      className="inline-flex items-center justify-center rounded-lg bg-signal px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-signal-dark"
+    >
+      + Add product
+    </Link>
+  </div>
+</div>
+
+        <div className="sticky top-[89px] z-20 -mx-4 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur">
+  <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+
+    <div className="min-w-0 flex-1">
+      <SearchBar
+        value={searchInput}
+        onChange={setSearchInput}
+      />
+    </div>
+
+    <div className="flex flex-wrap items-center gap-2">
+      <FilterSort
+        categories={categories}
+        category={category}
+        onCategoryChange={handleCategoryChange}
+        sort={sortParam}
+        onSortChange={handleSortChange}
+        searchActive={Boolean(q)}
+      />
+
+      <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-1">
+        <button
+          type="button"
+          onClick={() => setViewMode("table")}
+          className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+            viewMode === "table"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-500 hover:text-slate-900"
+          }`}
+        >
+          ▤ Table
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setViewMode("cards")}
+          className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+            viewMode === "cards"
+              ? "bg-white text-slate-900 shadow-sm"
+              : "text-slate-500 hover:text-slate-900"
+          }`}
+        >
+          ▦ Cards
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 

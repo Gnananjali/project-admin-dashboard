@@ -34,6 +34,8 @@ function ProductsPageContent() {
   deleteProduct: saveDeletedProduct,
 } = useProducts();
 
+
+
   const page = parseIntParam(searchParams.get("page"), 1);
   const pageSize = [10, 20, 50].includes(Number(searchParams.get("pageSize")))
     ? Number(searchParams.get("pageSize"))
@@ -46,6 +48,7 @@ function ProductsPageContent() {
   const debouncedSearch = useDebounce(searchInput, 400);
 
   const [products, setProducts] = useState([]);
+  const [viewMode, setViewMode] = useState("table");
   const [total, setTotal] = useState(0);
   const [categories, setCategories] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | success | error | empty
@@ -234,7 +237,7 @@ setStatus(uniqueProducts.length === 0 ? "empty" : "success");
     <>
       <Header />
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 bg-white px-4 py-3">
           <h1 className="text-lg font-semibold text-ink-900">Products</h1>
           <Link
             href="/products/new"
@@ -244,17 +247,46 @@ setStatus(uniqueProducts.length === 0 ? "empty" : "success");
           </Link>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <SearchBar value={searchInput} onChange={setSearchInput} />
-          <FilterSort
-            categories={categories}
-            category={category}
-            onCategoryChange={handleCategoryChange}
-            sort={sortParam}
-            onSortChange={handleSortChange}
-            searchActive={Boolean(q)}
-          />
-        </div>
+        <div className="sticky top-[61px] z-20 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 bg-white px-4 py-3">
+  <SearchBar value={searchInput} onChange={setSearchInput} />
+
+  <div className="flex flex-wrap items-center gap-3">
+    <FilterSort
+      categories={categories}
+      category={category}
+      onCategoryChange={handleCategoryChange}
+      sort={sortParam}
+      onSortChange={handleSortChange}
+      searchActive={Boolean(q)}
+    />
+
+    <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1">
+      <button
+        type="button"
+        onClick={() => setViewMode("table")}
+        className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+          viewMode === "table"
+            ? "bg-slate-100 text-slate-900"
+            : "text-slate-500 hover:text-slate-900"
+        }`}
+      >
+        ▤ Table
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setViewMode("cards")}
+        className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+          viewMode === "cards"
+            ? "bg-slate-100 text-slate-900"
+            : "text-slate-500 hover:text-slate-900"
+        }`}
+      >
+        ▦ Cards
+      </button>
+    </div>
+  </div>
+</div>
 
         <div className="mt-5">
           {status === "loading" && <Loader label="Loading products..." />}
@@ -264,8 +296,17 @@ setStatus(uniqueProducts.length === 0 ? "empty" : "success");
           )}
           {status === "success" && (
             <>
-              <ProductTable products={products} onDelete={setDeleteTarget} />
-              <ProductCard products={products} onDelete={setDeleteTarget} />
+              {viewMode === "table" ? (
+  <ProductTable
+    products={products}
+    onDelete={setDeleteTarget}
+  />
+) : (
+  <ProductCard
+    products={products}
+    onDelete={setDeleteTarget}
+  />
+)}
               <div className="mt-4">
                 <Pagination
                   page={page}

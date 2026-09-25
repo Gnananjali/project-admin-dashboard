@@ -25,7 +25,7 @@ npm start
 ```
 
 No environment variables are needed — the API base URL is set in
-`src/lib/axios.js`.
+`lib/axios.js`.
 
 ## Project structure
 
@@ -36,13 +36,22 @@ app/                         Routes (App Router)
   products/[id]/page.js       Product details + reviews
   products/[id]/edit/page.js  Edit product
   products/new/page.js        Add product
-src/
-  api/                        One file per API resource (auth, products)
-  lib/axios.js                Shared Axios instance: auth header + error handling
-  lib/auth.js                 localStorage token helpers
-  context/AuthContext.js      Login state, shared across the app
-  components/                 Small, focused UI components
-  hooks/useDebounce.js        Debounce hook used by the search box
+api/                         API functions
+  auth.js                     Authentication API calls
+  products.js                 Product API calls
+
+lib/                         Shared utilities
+  axios.js                    Shared Axios instance: auth header + error handling
+  auth.js                     localStorage token helpers
+
+context/                     Shared application state
+  AuthContext.js              Login state, shared across the app
+  ProductContext.js            Local product mutation state
+
+components/                  Small, focused UI components
+
+hooks/                       Custom React hooks
+  useDebounce.js              Debounce hook used by the search box
 ```
 
 ## What's finished
@@ -82,12 +91,13 @@ category dropdown is disabled while a search is active. This keeps the
 pagination math (`total`, `skip`, `limit`) always matching what's actually
 on screen.
 
-**Add/edit/delete aren't really persisted.** DummyJSON accepts these
-requests and returns a plausible response, but nothing is saved on their
-server — a refresh would show the old data. So the app updates its own
-local state after a successful call (removes the row on delete, navigates
-back to the list on add/edit) to reflect the action in the UI, and says so
-next to the add/edit forms so it isn't confused for a real backend.
+**Add/edit/delete aren't really persisted by DummyJSON.** DummyJSON accepts
+these requests and returns a plausible response, but the changes are not
+saved on its server. To keep the UI consistent after refresh, the app stores
+add/edit/delete changes in `localStorage` and applies those local changes
+when displaying products. A note is also shown next to the add/edit forms
+explaining this limitation, so the mock API isn't confused with a real
+persistent backend.
 
 **Race conditions in search.** Every product fetch carries an incrementing
 request id and an `AbortController`. When a new request starts, the
@@ -114,8 +124,11 @@ the visible label.
 
 ## Where AI helped
 
-I used AI assistance to scaffold the file layout, the Axios interceptor
-setup, and the debounced-search/AbortController pattern, then read
-through and adjusted each file myself. I can walk through any part of the
-code and explain the reasoning, and I'm expecting to make a small live
-change in the review round.
+I used AI assistance to help scaffold the file layout, the Axios interceptor
+setup, and the debounced-search/AbortController pattern. I then reviewed,
+adjusted, tested, and integrated the code myself.
+
+I can walk through the implementation and explain the reasoning behind the
+main parts of the application, including authentication, API requests,
+pagination, search, race-condition handling, URL state, and local product
+persistence.

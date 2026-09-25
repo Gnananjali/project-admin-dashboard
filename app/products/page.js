@@ -107,6 +107,7 @@ setErrorMessage("");
 
     fetchProducts({ page, limit: pageSize, q, category, sortBy, order, signal: controller.signal })
       .then((data) => {
+        
       if (requestId !== latestRequestId.current) return;
 
       
@@ -160,6 +161,8 @@ const deletedFromApiCount = mutations.deleted.filter(
   (id) => !mutations.added.some((product) => product.id === id)
 ).length;
 
+// DummyJSON always reports the original API total.
+// Local additions/deletions are applied only to the displayed total.
 const adjustedTotal = Math.max(
   0,
   data.total + localAddedCount - deletedFromApiCount
@@ -230,7 +233,7 @@ setStatus(uniqueProducts.length === 0 ? "empty" : "success");
       prev.filter((p) => p.id !== deleteTarget.id)
     );
 
-    setTotal((prev) => Math.max(0, prev - 1));
+    
     setDeleteTarget(null);
   } catch (err) {
     setErrorMessage(err.message || "Could not delete this product.");
